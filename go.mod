@@ -1,3 +1,3 @@
-module GopherSocial
+module github.com/DimaMaimesko/GopherSocial
 
-go 1.26
+go 1.26.2
