@@ -40,7 +40,7 @@ func main() {
 
 	defer db.Close()
 	log.Println("database connection pool established")
-	st := store.NewPostgresStorage(nil)
+	st := store.NewPostgresStorage(db)
 
 	app := &application{
 		config: cfg,
