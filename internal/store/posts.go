@@ -190,14 +190,18 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedF
 	query := `
 		SELECT 
 			p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags,
-			u.username,
+			u.id, u.username,
 			COUNT(c.id) AS comments_count
 		FROM posts p
 		LEFT JOIN comments c ON c.post_id = p.id
 		LEFT JOIN users u ON p.user_id = u.id
-		JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
-		WHERE f.user_id = $1 OR p.user_id = $1
-		GROUP BY p.id, u.username
+		WHERE 
+			p.user_id IN (
+				SELECT user_id FROM followers WHERE follower_id = $1
+			)
+			AND ($4 = '' OR p.title ILIKE '%' || $4 || '%' OR p.content ILIKE '%' || $4 || '%')
+			AND (cardinality($5::text[]) = 0 OR p.tags::text[] @> $5::text[])
+		GROUP BY p.id, u.id, u.username
 		ORDER BY p.created_at ` + fq.Sort + `
 		LIMIT $2 OFFSET $3
 	`
@@ -205,17 +209,21 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedF
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(ctx, query, userID, fq.Limit, fq.Offset)
+	tags := fq.Tags
+	if tags == nil {
+		tags = []string{}
+	}
+
+	rows, err := s.db.QueryContext(ctx, query, userID, fq.Limit, fq.Offset, fq.Search, pq.Array(tags))
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
-	var feed []PostWithMetadata
+	feed := []PostWithMetadata{}
 	for rows.Next() {
 		var p PostWithMetadata
-		err := rows.Scan(
+		if err := rows.Scan(
 			&p.ID,
 			&p.UserID,
 			&p.Title,
@@ -223,14 +231,16 @@ func (s *PostStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedF
 			&p.CreatedAt,
 			&p.Version,
 			pq.Array(&p.Tags),
+			&p.User.ID,
 			&p.User.Username,
 			&p.CommentsCount,
-		)
-		if err != nil {
+		); err != nil {
 			return nil, err
 		}
-
 		feed = append(feed, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return feed, nil
