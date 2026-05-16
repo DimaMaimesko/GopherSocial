@@ -1,10 +1,13 @@
 package main
 
 import (
+	"os"
+
 	"github.com/DimaMaimesko/GopherSocial/internal/db"
 	"github.com/DimaMaimesko/GopherSocial/internal/env"
 	"github.com/DimaMaimesko/GopherSocial/internal/store"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/joho/godotenv"
 )
@@ -12,6 +15,20 @@ import (
 const version = "0.0.1"
 
 func main() {
+
+	if err := os.MkdirAll("logs", 0755); err != nil {
+		panic(err)
+	}
+
+	loggerConfig := zap.NewProductionConfig()
+	loggerConfig.Encoding = "console"
+	loggerConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	loggerConfig.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	loggerConfig.OutputPaths = []string{"stdout", "logs/app.log"}
+	loggerConfig.ErrorOutputPaths = []string{"stderr", "logs/app-error.log"}
+
+	logger := zap.Must(loggerConfig.Build()).Sugar()
+	defer logger.Sync()
 
 	_ = godotenv.Load(".envrc")
 	//log.Println("DB_ADDR =", os.Getenv("DB_ADDR"))
@@ -26,10 +43,6 @@ func main() {
 		},
 		env: env.GetString("ENV", "development"),
 	}
-
-	// Logger
-	logger := zap.Must(zap.NewProduction()).Sugar()
-	defer logger.Sync()
 
 	db, err := db.New(
 		cfg.db.addr,
