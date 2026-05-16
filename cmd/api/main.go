@@ -1,11 +1,10 @@
 package main
 
 import (
-	"log"
-
 	"github.com/DimaMaimesko/GopherSocial/internal/db"
 	"github.com/DimaMaimesko/GopherSocial/internal/env"
 	"github.com/DimaMaimesko/GopherSocial/internal/store"
+	"go.uber.org/zap"
 
 	"github.com/joho/godotenv"
 )
@@ -28,6 +27,10 @@ func main() {
 		env: env.GetString("ENV", "development"),
 	}
 
+	// Logger
+	logger := zap.Must(zap.NewProduction()).Sugar()
+	defer logger.Sync()
+
 	db, err := db.New(
 		cfg.db.addr,
 		cfg.db.maxOpenConns,
@@ -35,22 +38,21 @@ func main() {
 		cfg.db.maxIdleTime,
 	)
 	if err != nil {
-		log.Panic(err)
+		logger.Fatal(err)
 	}
 
 	defer db.Close()
-	log.Println("database connection pool established")
+	logger.Info("database connection pool established")
 	st := store.NewPostgresStorage(db)
 
 	app := &application{
 		config: cfg,
 		store:  st,
+		logger: logger,
 	}
 
 	mux := app.mount()
 
-	error := app.run(mux)
-
-	log.Fatal(error)
+	logger.Fatal(app.run(mux))
 
 }
