@@ -20,6 +20,18 @@ type CreatePostPayload struct {
 	Tags    []string `json:"tags"`
 }
 
+// createPostHandler godoc
+//
+//	@Summary		Create post
+//	@Description	Creates a new post.
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		CreatePostPayload	true	"Create post payload"
+//	@Success		201		{object}	store.Post
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/posts/ [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -51,6 +63,15 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// getPostsHandler godoc
+//
+//	@Summary		List posts
+//	@Description	Returns all posts.
+//	@Tags			posts
+//	@Produce		json
+//	@Success		200	{array}		store.Post
+//	@Failure		500	{object}	map[string]string
+//	@Router			/posts/ [get]
 func (app *application) getPostsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	posts, err := app.store.Posts.GetAll(ctx)
@@ -65,6 +86,17 @@ func (app *application) getPostsHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+// getPostHandler godoc
+//
+//	@Summary		Get post
+//	@Description	Returns a post by ID.
+//	@Tags			posts
+//	@Produce		json
+//	@Param			postID	path		int	true	"Post ID"
+//	@Success		200		{object}	store.Post
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/posts/{postID}/ [get]
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 
@@ -82,6 +114,17 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// deletePostHandler godoc
+//
+//	@Summary		Delete post
+//	@Description	Deletes a post by ID.
+//	@Tags			posts
+//	@Produce		json
+//	@Param			postID	path		int	true	"Post ID"
+//	@Success		200		{object}	map[string]int
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/posts/{postID}/ [delete]
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "postID")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -113,6 +156,20 @@ type UpdatePostPayload struct {
 	Content *string `json:"content" validate:"omitempty,max=1000"`
 }
 
+// updatePostHandler godoc
+//
+//	@Summary		Update post
+//	@Description	Updates a post by ID.
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int					true	"Post ID"
+//	@Param			payload	body		UpdatePostPayload	true	"Update post payload"
+//	@Success		200		{object}	store.Post
+//	@Failure		400		{object}	map[string]string
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/posts/{postID}/ [patch]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 

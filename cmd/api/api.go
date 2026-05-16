@@ -5,11 +5,18 @@ import (
 	"net/http"
 	"time"
 
+	_ "github.com/DimaMaimesko/GopherSocial/docs"
 	"github.com/DimaMaimesko/GopherSocial/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
+// @title			GopherSocial API
+// @version		1.0
+// @description	API documentation for GopherSocial.
+// @host			localhost:8080
+// @BasePath		/v1
 type application struct {
 	config config
 	store  store.Storage
@@ -39,6 +46,10 @@ func (app *application) mount() *chi.Mux {
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
+
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)

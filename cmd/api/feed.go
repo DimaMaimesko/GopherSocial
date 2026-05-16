@@ -6,6 +6,21 @@ import (
 	"github.com/DimaMaimesko/GopherSocial/internal/store"
 )
 
+// getUserFeedHandler godoc
+//
+//	@Summary		Get user feed
+//	@Description	Returns the authenticated user's feed.
+//	@Tags			feed
+//	@Produce		json
+//	@Param			limit	query		int			false	"Limit"
+//	@Param			offset	query		int			false	"Offset"
+//	@Param			sort	query		string		false	"Sort direction"	Enums(asc, desc)
+//	@Param			search	query		string		false	"Search term"
+//	@Param			tags	query		[]string	false	"Tags"
+//	@Success		200		{array}		store.PostWithMetadata
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/users/feed [get]
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
 	fq := store.PaginatedFeedQuery{
 		Limit:  20,
