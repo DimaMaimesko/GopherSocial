@@ -6,6 +6,7 @@ import (
 
 	"github.com/DimaMaimesko/GopherSocial/internal/db"
 	"github.com/DimaMaimesko/GopherSocial/internal/env"
+	"github.com/DimaMaimesko/GopherSocial/internal/mailer"
 	"github.com/DimaMaimesko/GopherSocial/internal/store"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -15,6 +16,11 @@ import (
 
 const version = "0.0.1"
 
+// @title			GopherSocial API
+// @version		1.0
+// @description	API documentation for GopherSocial.
+// @host			localhost:8082
+// @BasePath		/v1
 func main() {
 
 	if err := os.MkdirAll("logs", 0755); err != nil {
@@ -44,8 +50,17 @@ func main() {
 		},
 		env: env.GetString("ENV", "development"),
 		mail: mailConfig{
-			exp: time.Hour * 24 * 3, // 3 days
+			exp:       time.Hour * 24 * 3, // 3 days
+			fromEmail: env.GetString("FROM_EMAIL", ""),
+			sendGrid: sendGridConfig{
+				apiKey: env.GetString("SENDGRID_API_KEY", ""),
+			},
+			mailTrap: mailTrapConfig{
+				apiKey:    env.GetString("MAILTRAP_API_KEY", "24fe2dadf5e4a531120fa99d55350a84"),
+				sandboxID: env.GetString("MAILTRAP_SANDBOX_ID", "4634866"),
+			},
 		},
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
 	}
 
 	db, err := db.New(
@@ -62,10 +77,23 @@ func main() {
 	logger.Info("database connection pool established")
 	st := store.NewPostgresStorage(db)
 
+	// Mailer
+	// mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
+	mailtrap, err := mailer.NewMailTrapClient(
+		cfg.mail.mailTrap.apiKey,
+		cfg.mail.mailTrap.sandboxID,
+		cfg.mail.fromEmail,
+	)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
 	app := &application{
 		config: cfg,
 		store:  st,
 		logger: logger,
+		//mailer: mailer,
+		mailer: mailtrap,
 	}
 
 	mux := app.mount()

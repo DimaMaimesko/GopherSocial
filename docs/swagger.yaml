@@ -1,3 +1,4 @@
+basePath: /v1
 definitions:
   main.CreatePostPayload:
     properties:
@@ -140,8 +141,12 @@ definitions:
       username:
         type: string
     type: object
+host: localhost:8082
 info:
   contact: {}
+  description: API documentation for GopherSocial.
+  title: GopherSocial API
+  version: "1.0"
 paths:
   /authentication/user:
     post:

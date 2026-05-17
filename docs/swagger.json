@@ -1,8 +1,13 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API documentation for GopherSocial.",
+        "title": "GopherSocial API",
+        "contact": {},
+        "version": "1.0"
     },
+    "host": "localhost:8082",
+    "basePath": "/v1",
     "paths": {
         "/authentication/user": {
             "post": {

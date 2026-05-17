@@ -789,12 +789,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8082",
+	BasePath:         "/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "GopherSocial API",
+	Description:      "API documentation for GopherSocial.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
